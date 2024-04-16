@@ -17,7 +17,7 @@ class TNSE(pydantic.BaseModel):
         z: float
     points: dict[str, PaperPoint]
 
-with open('tnse.csv', newline='') as csvfile:
+with open('./outputs_bioterrorism/paper_embeddings_clusters.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     tnse = TNSE(points={i['Paper ID']: TNSE.PaperPoint(paper_id=i['Paper ID'], cluster_label=i['Cluster Label'], x=i['t-SNE Dim 1'], y=i['t-SNE Dim 2'], z=i['t-SNE Dim 3']) for i in reader})
 
@@ -54,8 +54,8 @@ class Papers(pydantic.BaseModel):
         
     papers: dict[str, Paper]
 
-allPapers = Papers.model_validate_json(pathlib.Path('./allPapers.json').read_text()).papers
-allCitationsOutbond = J.model_validate_json(pathlib.Path('./allCitations.json').read_text()).p
+allPapers = Papers.model_validate_json(pathlib.Path('./outputs_bioterrorism/allPapers.json').read_text()).papers
+allCitationsOutbond = J.model_validate_json(pathlib.Path('./outputs_bioterrorism/allCitations.json').read_text()).p
 
 # Filter for citations that are in bioterrorism papers
 allCitations = {k: v for k, v in allCitationsOutbond.items() for cit in v.citations if cit.citedPaper.paperId in allPapers}
@@ -83,7 +83,7 @@ for src, links in allCitations.items():
 # %%
 pc = dict()
 
-with open('./pc.csv') as csvfile:
+with open('./outputs_bioterrorism/cluster_problem_scores.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     while True:
         ten_experts = list(sorted(itertools.islice(reader, 10), key=lambda i: float(i['Score'])))
@@ -104,7 +104,7 @@ def keep(edge):
 
     return any(i.isInfluential for i in dat) or len({i.citedPaper.paperId for i in dat}) >= 3
 
-with open('./clusters.csv') as csvfile:
+with open('./outputs_bioterrorism/cluster_labels.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     clusters = {int(i['Cluster_ID']): '\n'.join(textwrap.wrap(i['Cluster_Name'], width=20)) for i in reader}
 
@@ -176,8 +176,8 @@ graphviz = nx.nx_agraph.to_agraph(draw_graph)
 graphviz.graph_attr.update()
 graphviz.node_attr.update(fontsize=40)
 graphviz.edge_attr.update(dir='back')
-graphviz.draw('cluster_graph.png', prog='dot')
-display(PIL.Image.open('cluster_graph.png'))
+graphviz.draw('./outputs_bioterrorism/cluster_graph.png', prog='dot')
+display(PIL.Image.open('./outputs_bioterrorism/cluster_graph.png'))
 
 
 # %%
